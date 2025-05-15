@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acid-Base Reaction Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .game-area {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .mode-btn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .mode-btn.active {
+            background: #2c3e50;
+        }
+        .game-container {
+            display: none;
+        }
+        .active-container {
+            display: block;
+        }
+        .tutorial {
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .challenge {
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .reaction-area {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .chemical {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+        .acid {
+            background-color: #ff6b6b;
+        }
+        .base {
+            background-color: #4ecdc4;
+        }
+        .selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        .ph-scale {
+            height: 40px;
+            background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
+            border-radius: 5px;
+            margin: 20px 0;
+            position: relative;
+        }
+        .ph-indicator {
+            width: 20px;
+            height: 40px;
+            background-color: black;
+            border-radius: 5px;
+            position: absolute;
+            top: 0;
+            transition: left 0.5s;
+        }
+        .info-panel {
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .reaction-result {
+            text-align: center;
+            font-size: 1.2rem;
+            margin: 20px 0;
+            min-height: 50px;
+        }
+        .next-btn {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px auto;
+            display: block;
+        }
+        .score {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        @media (max-width: 600px) {
+            .reaction-area {
+                gap: 10px;
+            }
+            .chemical {
+                width: 80px;
+                height: 80px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Acid-Base Reaction Game</h1>
+            <p>Learn about acids, bases, and neutralization reactions!</p>
+        </header>
+        
+        <div class="game-area">
+            <div class="mode-selector">
+                <button class="mode-btn active" id="tutorial-btn">Tutorial</button>
+                <button class="mode-btn" id="challenge-btn">Challenge</button>
+                <button class="mode-btn" id="free-play-btn">Free Play</button>
+            </div>
+            
+            <div class="game-container active-container" id="tutorial-container">
+                <div class="tutorial" id="tutorial-step-1">
+                    <h3>Welcome to Acid-Base Reactions!</h3>
+                    <p>Acids and bases are important chemical compounds. When they combine, they undergo a neutralization reaction.</p>
+                    <p>In this game, you'll learn about common acids and bases, their properties, and how they react.</p>
+                    <button class="next-btn" id="tutorial-next-1">Next</button>
+                </div>
+                
+                <div class="tutorial" id="tutorial-step-2" style="display: none;">
+                    <h3>The pH Scale</h3>
+                    <p>The pH scale measures how acidic or basic a solution is:</p>
+                    <ul>
+                        <li>pH 0-6: Acidic</li>
+                        <li>pH 7: Neutral</li>
+                        <li>pH 8-14: Basic</li>
+                    </ul>
+                    <div class="ph-scale">
+                        <div class="ph-indicator" style="left: 0%;"></div>
+                    </div>
+                    <p style="display: flex; justify-content: space-between;">
+                        <span>0</span>
+                        <span>7</span>
+                        <span>14</span>
+                    </p>
+                    <button class="next-btn" id="tutorial-next-2">Next</button>
+                </div>
+                
+                <div class="tutorial" id="tutorial-step-3" style="display: none;">
+                    <h3>Neutralization Reactions</h3>
+                    <p>When an acid and a base react, they form a salt and water. This is called neutralization.</p>
+                    <p>For example: HCl (acid) + NaOH (base) → NaCl (salt) + H₂O (water)</p>
+                    <p>Try clicking on an acid and then a base to see the reaction:</p>
+                    
+                    <div class="reaction-area">
+                        <div class="chemical acid" data-name="HCl" data-ph="1">
+                            <p>HCl</p>
+                            <small>pH 1</small>
+                        </div>
+                        <div class="chemical base" data-name="NaOH" data-ph="13">
+                            <p>NaOH</p>
+                            <small>pH 13</small>
+                        </div>
+                    </div>
+                    
+                    <div class="reaction-result" id="tutorial-result"></div>
+                    
+                    <button class="next-btn" id="tutorial-next-3">Next</button>
+                </div>
+                
+                <div class="tutorial" id="tutorial-step-4" style="display: none;">
+                    <h3>Common Acids and Bases</h3>
+                    <p>Here are some common acids and bases you'll encounter:</p>
+                    
+                    <h4>Acids:</h4>
+                    <ul>
+                        <li>HCl - Hydrochloric acid (stomach acid)</li>
+                        <li>H₂SO₄ - Sulfuric acid (car batteries)</li>
+                        <li>CH₃COOH - Acetic acid (vinegar)</li>
+                    </ul>
+                    
+                    <h4>Bases:</h4>
+                    <ul>
+                        <li>NaOH - Sodium hydroxide (drain cleaner)</li>
+                        <li>NH₃ - Ammonia (cleaning products)</li>
+                        <li>Mg(OH)₂ - Magnesium hydroxide (milk of magnesia)</li>
+                    </ul>
+                    
+                    <button class="next-btn" id="tutorial-next-4">Next</button>
+                </div>
+                
+                <div class="tutorial" id="tutorial-step-5" style="display: none;">
+                    <h3>Ready to Play!</h3>
+                    <p>You've completed the tutorial! Now you can test your knowledge in Challenge mode or experiment in Free Play mode.</p>
+                    <button class="next-btn" id="tutorial-complete">Start Challenges</button>
+                </div>
+            </div>
+            
+            <div class="game-container" id="challenge-container">
+                <div class="challenge" id="current-challenge">
+                    <h3>Challenge <span id="challenge-number">1</span>:</h3>
+                    <p id="challenge-description">Create a neutralization reaction using HCl and NaOH. What will be the products?</p>
+                </div>
+                
+                <div class="reaction-area" id="challenge-chemicals">
+                    <!-- Chemicals will be added here by JS -->
+                </div>
+                
+                <div class="ph-scale">
+                    <div class="ph-indicator" id="challenge-ph-indicator" style="left: 50%;"></div>
+                </div>
+                <p style="display: flex; justify-content: space-between;">
+                    <span>0</span>
+                    <span>7</span>
+                    <span>14</span>
+                </p>
+                
+                <div class="reaction-result" id="challenge-result"></div>
+                
+                <div class="info-panel" id="info-panel">
+                    Select chemicals to see information
+                </div>
+                
+                <button class="next-btn" id="check-answer">Check Answer</button>
+                
+                <div class="score">Score: <span id="score">0</span></div>
+            </div>
+            
+            <div class="game-container" id="free-play-container">
+                <h3>Free Play Mode</h3>
+                <p>Experiment with different acid-base combinations!</p>
+                
+                <div class="reaction-area" id="free-play-chemicals">
+                    <!-- Chemicals will be added here by JS -->
+                </div>
+                
+                <div class="ph-scale">
+                    <div class="ph-indicator" id="free-play-ph-indicator" style="left: 50%;"></div>
+                </div>
+                <p style="display: flex; justify-content: space-between;">
+                    <span>0</span>
+                    <span>7</span>
+                    <span>14</span>
+                </p>
+                
+                <div class="reaction-result" id="free-play-result"></div>
+                
+                <div class="info-panel" id="free-play-info-panel">
+                    Select chemicals to see information
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chemical data
+        const chemicals = {
+            acids: [
+                { name: 'HCl', fullName: 'Hydrochloric Acid', ph: 1, info: 'Found in stomach acid, used in metal cleaning', formula: 'HCl' },
+                { name: 'H₂SO₄', fullName: 'Sulfuric Acid', ph: 0.5, info: 'Used in car batteries, fertilizer production', formula: 'H₂SO₄' },
+                { name: 'CH₃COOH', fullName: 'Acetic Acid', ph: 3, info: 'Found in vinegar, used in food preservation', formula: 'CH₃COOH' },
+                { name: 'H₃PO₄', fullName: 'Phosphoric Acid', ph: 2, info: 'Used in soft drinks, rust removal', formula: 'H₃PO₄' },
+                { name: 'HNO₃', fullName: 'Nitric Acid', ph: 1.2, info: 'Used in fertilizer production, metal etching', formula: 'HNO₃' }
+            ],
+            bases: [
+                { name: 'NaOH', fullName: 'Sodium Hydroxide', ph: 13, info: 'Found in drain cleaners, soap making', formula: 'NaOH' },
+                { name: 'NH₃', fullName: 'Ammonia', ph: 11, info: 'Used in cleaning products, fertilizers', formula: 'NH₃' },
+                { name: 'Mg(OH)₂', fullName: 'Magnesium Hydroxide', ph: 10.5, info: 'Used in antacids like milk of magnesia', formula: 'Mg(OH)₂' },
+                { name: 'Ca(OH)₂', fullName: 'Calcium Hydroxide', ph: 12.5, info: 'Used in mortar, water treatment', formula: 'Ca(OH)₂' },
+                { name: 'KOH', fullName: 'Potassium Hydroxide', ph: 13.5, info: 'Used in making soap, biodiesel', formula: 'KOH' }
+            ]
+        };
+
+        // Reactions data
+        const reactions = {
+            'HCl+NaOH': { products: 'NaCl + H₂O', equation: 'HCl + NaOH → NaCl + H₂O', description: 'Hydrochloric acid reacts with sodium hydroxide to form salt (sodium chloride) and water.' },
+            'HCl+KOH': { products: 'KCl + H₂O', equation: 'HCl + KOH → KCl + H₂O', description: 'Hydrochloric acid reacts with potassium hydroxide to form potassium chloride and water.' },
+            'HCl+NH₃': { products: 'NH₄Cl', equation: 'HCl + NH₃ → NH₄Cl', description: 'Hydrochloric acid reacts with ammonia to form ammonium chloride.' },
+            'HCl+Mg(OH)₂': { products: 'MgCl₂ + 2H₂O', equation: '2HCl + Mg(OH)₂ → MgCl₂ + 2H₂O', description: 'Hydrochloric acid reacts with magnesium hydroxide to form magnesium chloride and water.' },
+            'HCl+Ca(OH)₂': { products: 'CaCl₂ + 2H₂O', equation: '2HCl + Ca(OH)₂ → CaCl₂ + 2H₂O', description: 'Hydrochloric acid reacts with calcium hydroxide to form calcium chloride and water.' },
+            'H₂SO₄+NaOH': { products: 'Na₂SO₄ + 2H₂O', equation: 'H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O', description: 'Sulfuric acid reacts with sodium hydroxide to form sodium sulfate and water.' },
+            'H₂SO₄+KOH': { products: 'K₂SO₄ + 2H₂O', equation: 'H₂SO₄ + 2KOH → K₂SO₄ + 2H₂O', description: 'Sulfuric acid reacts with potassium hydroxide to form potassium sulfate and water.' },
+            'H₂SO₄+NH₃': { products: '(NH₄)₂SO₄', equation: 'H₂SO₄ + 2NH₃ → (NH₄)₂SO₄', description: 'Sulfuric acid reacts with ammonia to form ammonium sulfate.' },
+            'CH₃COOH+NaOH': { products: 'CH₃COONa + H₂O', equation: 'CH₃COOH + NaOH → CH₃COONa + H₂O', description: 'Acetic acid reacts with sodium hydroxide to form sodium acetate and water.' },
+            'CH₃COOH+KOH': { products: 'CH₃COOK + H₂O', equation: 'CH₃COOH + KOH → CH₃COOK + H₂O', description: 'Acetic acid reacts with potassium hydroxide to form potassium acetate and water.' },
+            'default': { products: 'Salt + Water', equation: 'Acid + Base → Salt + Water', description: 'This neutralization reaction produces a salt and water.' }
+        };
+
+        // Challenge data
+        const challenges = [
+            {
+                question: "Create a neutralization reaction using HCl and NaOH. What will be the products?",
+                acids: ['HCl'],
+                bases: ['NaOH'],
+                correctAcid: 'HCl',
+                correctBase: 'NaOH',
+                answer: 'NaCl + H₂O'
+            },
+            {
+                question: "Vinegar is a weak acid. React acetic acid (CH₃COOH) with sodium hydroxide (NaOH). What products form?",
+                acids: ['CH₃COOH', 'HCl'],
+                bases: ['NaOH', 'NH₃'],
+                correctAcid: 'CH₃COOH',
+                correctBase: 'NaOH',
+                answer: 'CH₃COONa + H₂O'
+            },
+            {
+                question: "Sulfuric acid is used in car batteries. React H₂SO₄ with potassium hydroxide (KOH). What products form?",
+                acids: ['H₂SO₄', 'HNO₃', 'CH₃COOH'],
+                bases: ['KOH', 'NaOH'],
+                correctAcid: 'H₂SO₄',
+                correctBase: 'KOH',
+                answer: 'K₂SO₄ + 2H₂O'
+            },
+            {
+                question: "Ammonia is a weak base found in many cleaning products. React HCl with NH₃. What product forms?",
+                acids: ['HCl', 'H₃PO₄'],
+                bases: ['NH₃', 'Ca(OH)₂', 'NaOH'],
+                correctAcid: 'HCl',
+                correctBase: 'NH₃',
+                answer: 'NH₄Cl'
+            },
+            {
+                question: "Milk of magnesia is an antacid containing Mg(OH)₂. React it with hydrochloric acid (HCl) from stomach acid. What products form?",
+                acids: ['HCl', 'CH₃COOH', 'H₂SO₄'],
+                bases: ['Mg(OH)₂', 'NaOH'],
+                correctAcid: 'HCl',
+                correctBase: 'Mg(OH)₂',
+                answer: 'MgCl₂ + 2H₂O'
+            }
+        ];
+
+        // Game state
+        let state = {
+            currentMode: 'tutorial',
+            tutorialStep: 1,
+            selectedAcid: null,
+            selectedBase: null,
+            challengeIndex: 0,
+            score: 0
+        };
+
+        // DOM Elements
+        const tutorialBtn = document.getElementById('tutorial-btn');
+        const challengeBtn = document.getElementById('challenge-btn');
+        const freePlayBtn = document.getElementById('free-play-btn');
+        const tutorialContainer = document.getElementById('tutorial-container');
+        const challengeContainer = document.getElementById('challenge-container');
+        const freePlayContainer = document.getElementById('free-play-container');
+        const tutorialResult = document.getElementById('tutorial-result');
+        const challengeResult = document.getElementById('challenge-result');
+        const freePlayResult = document.getElementById('free-play-result');
+        const infoPanelEl = document.getElementById('info-panel');
+        const freePlayInfoPanel = document.getElementById('free-play-info-panel');
+        const challengePhIndicator = document.getElementById('challenge-ph-indicator');
+        const freePlayPhIndicator = document.getElementById('free-play-ph-indicator');
+        const challengeChemicals = document.getElementById('challenge-chemicals');
+        const freePlayChemicals = document.getElementById('free-play-chemicals');
+        const challengeNumberEl = document.getElementById('challenge-number');
+        const challengeDescriptionEl = document.getElementById('challenge-description');
+        const scoreEl = document.getElementById('score');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', initGame);
+
+        // Event Listeners
+        tutorialBtn.addEventListener('click', () => switchMode('tutorial'));
+        challengeBtn.addEventListener('click', () => switchMode('challenge'));
+        freePlayBtn.addEventListener('click', () => switchMode('free-play'));
+
+        document.getElementById('tutorial-next-1').addEventListener('click', () => nextTutorialStep(2));
+        document.getElementById('tutorial-next-2').addEventListener('click', () => nextTutorialStep(3));
+        document.getElementById('tutorial-next-3').addEventListener('click', () => nextTutorialStep(4));
+        document.getElementById('tutorial-next-4').addEventListener('click', () => nextTutorialStep(5));
+        document.getElementById('tutorial-complete').addEventListener('click', () => switchMode('challenge'));
+        document.getElementById('check-answer').addEventListener('click', checkAnswer);
+
+        // Tutorial step 3 reaction
+        document.querySelectorAll('#tutorial-step-3 .chemical').forEach(chemical => {
+            chemical.addEventListener('click', handleTutorialChemicalClick);
+        });
+
+        function initGame() {
+            // Initialize free play chemicals
+            populateChemicals(freePlayChemicals, chemicals.acids, 'acid');
+            populateChemicals(freePlayChemicals, chemicals.bases, 'base');
+            
+            // Set up challenge
+            loadChallenge(0);
+            
+            // Set event listeners for tutorial step 3
+            const tutorialAcid = document.querySelector('#tutorial-step-3 .acid');
+            const tutorialBase = document.querySelector('#tutorial-step-3 .base');
+            
+            tutorialAcid.addEventListener('click', () => {
+                selectTutorialChemical(tutorialAcid, tutorialBase);
+            });
+            
+            tutorialBase.addEventListener('click', () => {
+                selectTutorialChemical(tutorialBase, tutorialAcid);
+            });
+        }
+
+        function populateChemicals(container, chemicalList, type) {
+            chemicalList.forEach(chemical => {
+                const element = document.createElement('div');
+                element.className = `chemical ${type}`;
+                element.dataset.name = chemical.name;
+                element.dataset.ph = chemical.ph;
+                element.dataset.type = type;
+                element.dataset.info = chemical.info;
+                
+                const name = document.createElement('p');
+                name.textContent = chemical.name;
+                element.appendChild(name);
+                
+                const phInfo = document.createElement('small');
+                phInfo.textContent = `pH ${chemical.ph}`;
+                element.appendChild(phInfo);
+                
+                element.addEventListener('click', handleChemicalClick);
+                container.appendChild(element);
+            });
+        }
+
+        function handleTutorialChemicalClick(e) {
+            const chemical = e.currentTarget;
+            const isAcid = chemical.classList.contains('acid');
+            
+            // Toggle selection
+            document.querySelectorAll('#tutorial-step-3 .chemical').forEach(c => {
+                c.classList.remove('selected');
+            });
+            chemical.classList.add('selected');
+            
+            // If both acid and base are selected
+            const acid = document.querySelector('#tutorial-step-3 .acid.selected');
+            const base = document.querySelector('#tutorial-step-3 .base.selected');
+            
+            if (acid && base) {
+                const reaction = reactions['HCl+NaOH'];
+                tutorialResult.innerHTML = `<strong>${reaction.equation}</strong><br>${reaction.description}`;
+            }
+        }
+
+        function selectTutorialChemical(selected, other) {
+            document.querySelectorAll('#tutorial-step-3 .chemical').forEach(c => {
+                c.classList.remove('selected');
+            });
+            selected.classList.add('selected');
+            
+            if (document.querySelector('#tutorial-step-3 .acid.selected') && 
+                document.querySelector('#tutorial-step-3 .base.selected')) {
+                const reaction = reactions['HCl+NaOH'];
+                tutorialResult.innerHTML = `<strong>${reaction.equation}</strong><br>${reaction.description}`;
+            }
+        }
+
+        function handleChemicalClick(e) {
+            const chemical = e.currentTarget;
+            const type = chemical.dataset.type;
+            const phValue = parseFloat(chemical.dataset.ph);
+            const chemicalName = chemical.dataset.name;
+            
+            // Update information panel
+            updateInfoPanel(chemical);
+            
+            // Handle selection based on game mode
+            if (state.currentMode === 'challenge') {
+                if (type === 'acid') {
+                    // Deselect any previously selected acid
+                    document.querySelectorAll('#challenge-chemicals .acid').forEach(c => {
+                        c.classList.remove('selected');
+                    });
+                    chemical.classList.add('selected');
+                    state.selectedAcid = chemicalName;
+                } else {
+                    // Deselect any previously selected base
+                    document.querySelectorAll('#challenge-chemicals .base').forEach(c => {
+                        c.classList.remove('selected');
+                    });
+                    chemical.classList.add('selected');
+                    state.selectedBase = chemicalName;
+                }
+                
+                // Update pH indicator and display reaction if both selected
+                updatePhIndicator(phValue, challengePhIndicator);
+                
+                if (state.selectedAcid && state.selectedBase) {
+                    displayReaction(state.selectedAcid, state.selectedBase, challengeResult);
+                }
+            } else if (state.currentMode === 'free-play') {
+                if (type === 'acid') {
+                    // Deselect any previously selected acid
+                    document.querySelectorAll('#free-play-chemicals .acid').forEach(c => {
+                        c.classList.remove('selected');
+                    });
+                    chemical.classList.add('selected');
+                    state.selectedAcid = chemicalName;
+                } else {
+                    // Deselect any previously selected base
+                    document.querySelectorAll('#free-play-chemicals .base').forEach(c => {
+                        c.classList.remove('selected');
+                    });
+                    chemical.classList.add('selected');
+                    state.selectedBase = chemicalName;
+                }
+                
+                // Update pH indicator and display reaction if both selected
+                updatePhIndicator(phValue, freePlayPhIndicator);
+                
+                if (state.selectedAcid && state.selectedBase) {
+                    displayReaction(state.selectedAcid, state.selectedBase, freePlayResult);
+                }
+            }
+        }
+
+        function updateInfoPanel(chemical) {
+            const name = chemical.dataset.name;
+            const type = chemical.dataset.type === 'acid' ? 'Acid' : 'Base';
+            const ph = chemical.dataset.ph;
+            const info = chemical.dataset.info;
+            
+            const chemicalInfo = getChemicalFullInfo(name, type.toLowerCase());
+            
+            const infoContent = `
+                <h4>${chemicalInfo.fullName} (${name})</h4>
+                <p><strong>Type:</strong> ${type}</p>
+                <p><strong>pH:</strong> ${ph}</p>
+                <p><strong>Info:</strong> ${info}</p>
+            `;
+            
+            if (state.currentMode === 'challenge') {
+                infoPanelEl.innerHTML = infoContent;
+            } else {
+                freePlayInfoPanel.innerHTML = infoContent;
+            }
+        }
+
+        function getChemicalFullInfo(name, type) {
+            if (type === 'acid') {
+                return chemicals.acids.find(acid => acid.name === name) || { fullName: name, ph: 7, info: 'No information available' };
+            } else {
+                return chemicals.bases.find(base => base.name === name) || { fullName: name, ph: 7, info: 'No information available' };
+            }
+        }
+
+        function updatePhIndicator(ph, indicator) {
+            // Convert pH to position percentage (0 = 0%, 14 = 100%)
+            const position = (ph / 14) * 100;
+            indicator.style.left = `${position}%`;
+        }
+
+        function displayReaction(acidName, baseName, resultElement) {
+            const reactionKey = `${acidName}+${baseName}`;
+            const reaction = reactions[reactionKey] || reactions.default;
+            
+            resultElement.innerHTML = `
+                <strong>${reaction.equation}</strong>
+                <p>${reaction.description}</p>
+            `;
+        }
+
+        function switchMode(mode) {
+            // Update active button
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`${mode}-btn`).classList.add('active');
+            
+            // Hide all containers
+            document.querySelectorAll('.game-container').forEach(container => {
+                container.classList.remove('active-container');
+            });
+            
+            // Show selected container
+            document.getElementById(`${mode}-container`).classList.add('active-container');
+            
+            // Reset selections
+            state.selectedAcid = null;
+            state.selectedBase = null;
+            document.querySelectorAll('.chemical').forEach(c => {
+                c.classList.remove('selected');
+            });
+            
+            // Reset results
+            challengeResult.innerHTML = '';
+            freePlayResult.innerHTML = '';
+            
+            // Set current mode
+            state.currentMode = mode;
+            
+            // Special handling
+            if (mode === 'challenge') {
+                loadChallenge(state.challengeIndex);
+            }
+        }
+
+        function nextTutorialStep(step) {
+            // Hide all tutorial steps
+            document.querySelectorAll('.tutorial-step').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Show current step
+            document.getElementById(`tutorial-step-${step}`).style.display = 'block';
+            
+            // Update state
+            state.tutorialStep = step;
+        }
+
+        function loadChallenge(index) {
